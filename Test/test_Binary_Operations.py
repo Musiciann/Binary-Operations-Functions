@@ -75,11 +75,12 @@ class Test(TestCase):
         binary_direct = Binary_Operations.binary_divide('00000000', '00000010')
         assert binary_direct == '0'
 
-    def test_sum_floats(self):
-        float_num, binary_num = Binary_Operations.add_floats(2.5, 3.75)
-        assert float_num == 6.25
-
     def test_binary_subtract(self):
         binary_num = Binary_Operations.binary_subtract('00000101', '00000010')
         assert binary_num == '11'
+
+    def test_sum_floats_ieee754(self):
+        result_float, result_binary = Binary_Operations.sum_floats_ieee754(22.5, 33.2)
+        assert result_binary == '01000010010111101100110011001100'
+        assert result_float == 55.69999694824219
 

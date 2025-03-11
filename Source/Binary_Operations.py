@@ -230,39 +230,77 @@ def binary_subtract(minuend: str, subtrahend: str) -> str:
         result.pop()
     return ''.join(reversed(result))
 
-def float_to_binary(value):
-    int_representation = struct.unpack('!I', struct.pack('!f', value))[0]
+def float_to_ieee754(num):
+    sign_bit = '1' if num < 0 else '0'
+    if num == 0:
+        return '0' * 32
 
-    binary_representation = format(int_representation, '032b')
-    return binary_representation
+    num = abs(num)
+    integer_part = int(num)
+    fractional_part = num - integer_part
+
+    integer_binary = bin(integer_part)[2:] if integer_part > 0 else ''
+    fractional_binary = ''
+
+    while fractional_part and len(fractional_binary) < 23:
+        fractional_part *= 2
+        bit = int(fractional_part)
+        fractional_binary += str(bit)
+        fractional_part -= bit
+
+    if integer_binary:
+        exponent = len(integer_binary) - 1
+    elif '1' in fractional_binary:
+        exponent = -fractional_binary.index('1') - 1
+    else:
+        return '0' * 32
+
+    exponent_bits = bin(exponent + 127)[2:].zfill(8)
+    mantissa_bits = (integer_binary[1:] + fractional_binary).ljust(23, '0')[:23]
+
+    return f'{sign_bit}{exponent_bits}{mantissa_bits}'
 
 
-def add_floats(x, y):
-    if x < 0 or y < 0:
+def ieee754_to_float(ieee_binary):
+    sign = int(ieee_binary[0])
+    exponent = int(ieee_binary[1:9], 2) - 127
+    mantissa = ieee_binary[9:]
+
+    if exponent == -127 and all(b == '0' for b in mantissa):
+        return 0.0
+
+    mantissa_value = 1
+
+    for i, bit in enumerate(mantissa):
+        if bit == '1':
+            mantissa_value += 2 ** -(i + 1)
+
+    return (-1) ** sign * mantissa_value * (2 ** exponent)
+
+def sum_floats_ieee754(first_float, second_float):
+    if first_float < 0 or second_float < 0:
         raise ValueError("Error Sign Value.")
 
-    x_binary = float_to_binary(x)
-    y_binary = float_to_binary(y)
+    first_binary = float_to_ieee754(first_float)
+    second_binary = float_to_ieee754(second_float)
 
-    x_sign = int(x_binary[0], 2)
-    x_exponent = int(x_binary[1:9], 2)
-    x_mantissa = int(x_binary[9:], 2)
+    first_exponent = int(first_binary[1:9], 2)
+    first_mantissa = int(first_binary[9:], 2)
 
-    y_sign = int(y_binary[0], 2)
-    y_exponent = int(y_binary[1:9], 2)
-    y_mantissa = int(y_binary[9:], 2)
+    second_exponent = int(second_binary[1:9], 2)
+    second_mantissa = int(second_binary[9:], 2)
 
-    x_mantissa |= (1 << 23)
-    y_mantissa |= (1 << 23)
+    first_mantissa |= (1 << 23)
+    second_mantissa |= (1 << 23)
 
-    if x_exponent > y_exponent:
-        y_mantissa >>= (x_exponent - y_exponent)
-        exponent = x_exponent
+    if first_exponent > second_exponent:
+        second_mantissa >>= (first_exponent - second_exponent)
+        exponent = first_exponent
     else:
-        x_mantissa >>= (y_exponent - x_exponent)
-        exponent = y_exponent
+        first_mantissa >>= (second_exponent - first_exponent)
+        exponent = second_exponent
 
-    result_mantissa = x_mantissa + y_mantissa
+    result_mantissa = first_mantissa + second_mantissa
 
     if result_mantissa & (1 << 24):
         result_mantissa >>= 1
@@ -274,9 +312,10 @@ def add_floats(x, y):
         raise OverflowError("Exponent Overflow.")
 
     result_binary = f"{0:01b}{format(exponent, '08b')}{format(result_mantissa, '023b')}"
-    result_float = struct.unpack('!f', struct.pack('!I', int(result_binary, 2)))[0]
+    result_float = ieee754_to_float(result_binary)
 
     return result_float, result_binary
+
 
 
 
