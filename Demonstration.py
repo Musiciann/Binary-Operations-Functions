@@ -37,9 +37,10 @@ decimal_result = Binary_Operations.binary_to_decimal_direct_code(direct_binary)
 print(f"Decimal result: {decimal_result}\n")
 
 print("Division:")
-first_binary = input("Enter №1 binary >>> ")
-second_binary = input("Enter №2 binary >>> ")
-other_direct_binary = Binary_Operations.binary_divide(first_binary, second_binary)
+first_decimal = input("Enter №1 decimal >>> ")
+second_decimal = input("Enter №2 decimal >>> ")
+other_direct_binary = Binary_Operations.binary_divide(Binary_Operations.decimal_to_binary_direct_code(int(first_decimal)),
+                                                      Binary_Operations.decimal_to_binary_direct_code(int(second_decimal)))
 decimal_divide_result = Binary_Operations.binary_to_decimal_division(other_direct_binary)
 print(f"Binary division result: {other_direct_binary}")
 print(f"Decimal division result: {decimal_divide_result}\n")
