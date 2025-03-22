@@ -1,11 +1,9 @@
-from math import remainder
-import struct
-
+from constants import *
 
 def decimal_to_binary_direct_code(decimal_num: int) -> str:
 
     if decimal_num == 0:
-        return "00000000"
+        return VALUE_ZERO
 
     binary_num = ""
 
@@ -44,7 +42,7 @@ def decimal_to_binary_additional_code(decimal_num: int) -> str:
         return binary_additional
     else:
         binary_additional = decimal_to_binary_inverse_code(decimal_num)
-        binary_additional = additional_code_binary_sum(binary_additional, '00000001')
+        binary_additional = additional_code_binary_sum(binary_additional, VALUE_ONE)
         return binary_additional
 
 
@@ -100,7 +98,7 @@ def binary_to_decimal_additional_code(additional_binary_num: str) -> int:
         additional_binary_num = "".join(additional_binary_num)
 
         if sign == '1':
-            additional_binary_num = additional_code_binary_sum(additional_binary_num, '00000001')
+            additional_binary_num = additional_code_binary_sum(additional_binary_num, VALUE_ONE)
 
         decimal_num = binary_to_decimal_direct_code(additional_binary_num)
 
@@ -147,11 +145,11 @@ def binary_add_shifted(first_binary: str, second_binary: str) -> str:
 
 def binary_remainder_divide(remainder: str, divisor:str) -> str:
     divisor_length = len(divisor)
-    remainder_dividend = remainder.lstrip('0') + '000000'
+    remainder_dividend = remainder.lstrip('0') + ZERO_VALUE_6
     remainder_quotient = ''
     remainder = remainder.lstrip('0')
-    if remainder_dividend == '0000000':
-        return '00000'
+    if remainder_dividend == ZERO_VALUE_7:
+        return ZERO_VALUE_5
     else:
         for bit in remainder_dividend[len(remainder) + 1:]:
             remainder += bit
@@ -280,13 +278,10 @@ def ieee754_to_float(ieee_binary):
 def sum_floats_ieee754(first_float, second_float):
     if first_float < 0 or second_float < 0:
         raise ValueError("Error Sign Value.")
-
     first_binary = float_to_ieee754(first_float)
     second_binary = float_to_ieee754(second_float)
-
     first_exponent = int(first_binary[1:9], 2)
     first_mantissa = int(first_binary[9:], 2)
-
     second_exponent = int(second_binary[1:9], 2)
     second_mantissa = int(second_binary[9:], 2)
 
@@ -301,11 +296,9 @@ def sum_floats_ieee754(first_float, second_float):
         exponent = second_exponent
 
     result_mantissa = first_mantissa + second_mantissa
-
     if result_mantissa & (1 << 24):
         result_mantissa >>= 1
         exponent += 1
-
     result_mantissa &= ~(1 << 23)
 
     if exponent >= 255:
